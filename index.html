@@ -609,15 +609,25 @@ function tickDummy() {
   s.timestamp = new Date().toISOString();
   pushSeries();
 }
-function applyPayload(d) {
+
+function applyPayload(response) {
+  const d = response.data || response;
+
   const n = v => (typeof v === 'number' && isFinite(v)) ? v : null;
+
   if (n(d.tds) !== null) SENSOR.tds = d.tds;
   if (n(d.ph) !== null) SENSOR.ph = d.ph;
   if (n(d.flow_rate) !== null) SENSOR.flow_rate = d.flow_rate;
-  if (d.pump_status === 'ON' || d.pump_status === 'OFF') { SENSOR.pump_status = d.pump_status; PUMP.on = d.pump_status === 'ON'; }
+
+  if (d.pump_status === 'ON' || d.pump_status === 'OFF') {
+    SENSOR.pump_status = d.pump_status;
+    PUMP.on = d.pump_status === 'ON';
+  }
+
   SENSOR.esp32_status = d.esp32_status === 'online' ? 'online' : 'offline';
-  SENSOR.timestamp = d.timestamp || new Date().toISOString();
+  SENSOR.timestamp = d.created_at || d.timestamp || new Date().toISOString();
 }
+
 async function pollApi() {
   if (API.busy) return;
   if (!API.base) { API.error = 'Alamat server API belum diisi.'; SENSOR.esp32_status = 'offline'; return; }
